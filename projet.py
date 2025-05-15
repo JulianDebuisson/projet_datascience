@@ -9,6 +9,7 @@ from sklearn.model_selection import cross_val_score
 from sklearn.linear_model import Perceptron
 from sklearn.neighbors import KNeighborsClassifier
 import pickle
+from sklearn.metrics import f1_score, confusion_matrix, precision_score, recall_score
 
 # Importation des données
 
@@ -30,14 +31,40 @@ df.drop(columns=['id', 'age'], inplace=True)
 
 # suppression des données avec des valeurs manquantes
 
-df.dropna(inplace=True)
-print("Valeurs manquantes après suppression : \n", df.isnull().sum(), "\n")
+#df.dropna(inplace=True)
+#print("Valeurs manquantes après suppression : \n", df.isnull().sum(), "\n")
 
-"""# Remplacement des valeurs nulles dans les colonnes "credit_score" et "annual_mileage" par la moyenne de ces colonnes
-df['credit_score'].fillna(df['credit_score'].mean(), inplace=True)
-df['annual_mileage'].fillna(df['annual_mileage'].mean(), inplace=True)
-"""
+# Remplacement des valeurs nulles dans les colonnes "credit_score" et "annual_mileage" par la moyenne de ces colonnes
+df['credit_score'].fillna(df['credit_score'].median(), inplace=True)
+df['annual_mileage'].fillna(df['annual_mileage'].median(), inplace=True)
+  
 print(df.shape)
+
+columns_to_plot = [
+    'speeding_violations', 'duis', 'past_accidents', 'age', 'gender',
+    'credit_score', 'vehicle_ownership', 'married', 'children', 'annual_mileage'
+]
+
+# Affichage des histogrammes dans une seule fenêtre matplotlib
+num_columns = len(columns_to_plot)
+num_rows = ceil(num_columns / 3)  # 3 colonnes par ligne
+
+fig, axes = plt.subplots(num_rows, 3, figsize=(15, 5 * num_rows))
+axes = axes.flatten()
+
+for i, column in enumerate(columns_to_plot):
+    if column in df.columns:
+        df[column].hist(bins=20, edgecolor='black', ax=axes[i])
+        axes[i].set_title(f'Histogram of {column}')
+        axes[i].set_xlabel(column)
+        axes[i].set_ylabel('Frequency')
+
+# Supprimer les axes inutilisés si le nombre de colonnes n'est pas un multiple de 3
+for j in range(i + 1, len(axes)):
+    fig.delaxes(axes[j])
+
+plt.tight_layout()
+plt.show()
 
 # Modification des données abérrantes
 
@@ -56,20 +83,6 @@ df.loc[df['children'] > 1, 'children'] = 1
 
 print("\n\nMoyenne utilisée pour remplacement : ", 1)
 print(df['children'].describe())
-
-columns_to_plot = [
-    'speeding_violations', 'duis', 'past_accidents', 'age', 'gender',
-    'credit_score', 'vehicle_ownership', 'married', 'children', 'annual_mileage'
-]
-
-#for column in columns_to_plot:
-#    if column in df.columns:
-#        plt.figure()
-#        df[column].hist(bins=20, edgecolor='black')
-#        plt.title(f'Histogram of {column}')
-#        plt.xlabel(column)
-#        plt.ylabel('Frequency')
-#        plt.show()
 
 
 # Modification des données quantitatives en variables numériques
@@ -97,6 +110,15 @@ print(df.head())
 correlation_matrix = df.corr()
 print("Matrice de corrélation :")
 print(correlation_matrix)
+# Affichage de la matrice de corrélation sous forme de heatmap
+plt.figure(figsize=(12, 10))
+plt.title("Matrice de corrélation")
+heatmap = plt.imshow(correlation_matrix, cmap='coolwarm', interpolation='nearest')
+plt.colorbar(heatmap)
+plt.xticks(range(len(correlation_matrix.columns)), correlation_matrix.columns, rotation=90)
+plt.yticks(range(len(correlation_matrix.columns)), correlation_matrix.columns)
+plt.tight_layout()
+plt.show()
 
 # Séparation des données en variables explicatives (X) et variable cible (y)
 X = df.drop(columns=['outcome'])  # Remplacez 'outcome' par le nom de votre colonne cible
@@ -116,6 +138,13 @@ print("\n\nModèle de régression logistique entraîné.")
 # Prédiction sur l'ensemble de test
 print("Précision du modèle : ", model.score(X_test, y_test))
 
+# Prédiction sur l'ensemble de test
+y_pred = model.predict(X_test)
+print("\nPrécision F1 : ", f1_score(y_test, y_pred))
+print("Précision Confusion : ", confusion_matrix(y_test, y_pred))
+print("Précision Précision : ", precision_score(y_test, y_pred))
+print("Précision Rappel : ", recall_score(y_test, y_pred))
+
 # Validation croisée pour évaluer le modèle
 cv_scores = cross_val_score(model, X, y, cv=5)
 print("Scores de validation croisée :", cv_scores)
@@ -129,6 +158,7 @@ print("\n\nModèle Perceptron entraîné.")
 # Prédiction sur l'ensemble de test avec le Perceptron
 perceptron_accuracy = perceptron_model.score(X_test, y_test)
 print("Précision du modèle Perceptron : ", perceptron_accuracy)
+
 
 # Validation croisée pour le Perceptron
 perceptron_cv_scores = cross_val_score(perceptron_model, X, y, cv=5)
