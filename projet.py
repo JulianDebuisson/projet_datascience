@@ -120,6 +120,13 @@ plt.yticks(range(len(correlation_matrix.columns)), correlation_matrix.columns)
 plt.tight_layout()
 plt.show()
 
+# Affichage des scatter plots pour visualiser les corrélations entre les colonnes
+scatter_columns = ['speeding_violations', 'duis', 'past_accidents', 'gender',
+    'credit_score', 'vehicle_ownership', 'married', 'children', 'annual_mileage']
+scatter_matrix(df[scatter_columns], figsize=(12, 8), diagonal='kde', alpha=0.7)
+plt.suptitle("Scatter Matrix des colonnes sélectionnées")
+plt.show()
+
 # Séparation des données en variables explicatives (X) et variable cible (y)
 X = df.drop(columns=['outcome'])  # Remplacez 'outcome' par le nom de votre colonne cible
 y = df['outcome']  # Remplacez 'outcome' par le nom de votre colonne cible
